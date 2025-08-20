@@ -1,0 +1,38 @@
+---
+description: 
+alwaysApply: false
+alwaysRespondChinese: true
+---
+
+# 数学、运动学与算法 (Math, Kinematics & Algorithms)
+
+本节规则旨在确保所有数学和算法相关的代码在数值上稳定、坐标系清晰且易于理解和验证。
+
+## 1. 核心库使用
+
+-   **C++**: **强制** 使用 **Eigen** 库进行所有线性代数运算。
+-   **Python**: **强制** 使用 **NumPy** 进行所有数值计算。
+-   **精度标准**: 所有与机器人状态相关的计算，**默认使用双精度浮点数** (`double` / `np.float64`)，以保证数值稳定性和避免累积误差。
+
+## 2. 几何与姿态表示
+
+-   **优先使用四元数**: **必须** 使用四元数 (Quaternion) 替代欧拉角来表示三维姿态，以避免万向节死锁问题。
+-   **善用几何库**: 积极使用 `tf2_geometry_msgs` (Python) 或 `tf2/convert.h` (C++) 来处理ROS消息和数学库对象（如Eigen的四元数）之间的转换。
+
+## 3. 坐标系管理 (TF - Transforms) - 最高优先级
+
+坐标系的正确性是移动机器人系统的基石，必须严格遵守。
+
+-   **命名必须体现坐标系**: 所有表示位姿、速度或向量的变量，其命名 **必须** 遵循 `[object]_in_[frame]` 或 `[from_frame]_to_[to_frame]` 的格式。
+    -   **示例**: `PoseStamped pose_of_base_link_in_odom;` `TransformStamped transform_odom_to_map;`
+
+-   **严禁手动变换**: **严禁** 手动进行矩阵乘法来实现坐标变换。**必须** 调用 `tf2` 库提供的标准API（如 `lookupTransform`, `doTransform`）。
+
+-   **时间戳必须同步**: 调用 `lookupTransform` 时，**必须** 使用待变换数据的时间戳 (`msg.header.stamp`)，以保证时空一致性。
+
+## 4. 算法实现
+
+-   **变量名匹配公式**: 将数学公式转化为代码时，变量名应尽量与公式或论文中的符号保持一致（如 `alpha`, `beta`, `kalman_gain`）。
+-   **注释引用来源**: 在实现来自论文或书籍的复杂算法时，**必须** 在代码注释中注明来源。
+    -   **示例**: `// EKF update step based on "Probabilistic Robotics", Thrun et al., Ch. 3.2`
+-   **注释关键步骤**: 对于没有直接文献来源的复杂自研算法，**必须** 提供伪代码或关键步骤的高级逻辑注释。
