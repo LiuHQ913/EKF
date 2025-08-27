@@ -16,9 +16,11 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Glog REQUIRED)
+find_package(glog REQUIRED)
 
 # Include directories
 include_directories(include)
@@ -28,12 +30,12 @@ add_library(ekf_core
   src/ekf_core.cpp
   src/utils.cpp
 )
-
+target_link_libraries(ekf_core glog::glog)
+ament_target_dependencies(ekf_core Eigen3)
 target_include_directories(ekf_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${EIGEN3_INCLUDE_DIRS}
-  glog::glog
 )
 
 # Create ekf_node executable
@@ -44,9 +46,16 @@ ament_target_dependencies(ekf_node
   sensor_msgs 
   nav_msgs 
   geometry_msgs
+  tf2
+  tf2_ros
 )
 
-target_link_libraries(ekf_node ekf_core)
+target_include_directories(ekf_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(ekf_node ekf_core glog::glog)
 
 # Install targets
 install(TARGETS ekf_core
@@ -60,6 +69,11 @@ install(TARGETS ekf_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install launch files
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch/
+)
+
 install(DIRECTORY include/
   DESTINATION include
 )
@@ -71,6 +85,8 @@ ament_export_dependencies(
   sensor_msgs
   nav_msgs
   geometry_msgs
+  tf2
+  tf2_ros
   Eigen3
 )
 
@@ -82,9 +98,9 @@ if(BUILD_TESTING)
   # Lint tests
   ament_lint_auto_find_test_dependencies()
   
-  # Unit tests
-  ament_add_gtest(test_ekf_core test/test_ekf_core.cpp)
-  target_link_libraries(test_ekf_core ekf_core)
+  # Unit tests (commented out until test files are created)
+  # ament_add_gtest(test_ekf_core test/test_ekf_core.cpp)
+  # target_link_libraries(test_ekf_core ekf_core)
 endif()
 
 ament_package()
